@@ -1,1 +1,1 @@
-"C:\Users\Administrator\Desktop\pscp\pscp.exe" -pw 1 "main.cpp" "getTileNonetool.cpp" "getTileNonetool.h" "Makefile" lhm@192.168.126.128:/home/lhm/getTitleNoneExiftool
+"C:\Users\Administrator\Desktop\pscp\pscp.exe" -pw MQ@123456789 "main.cpp" "getTileNonetool.cpp" "getTileNonetool.h" "Makefile" pi@192.168.6.80:/home/pi/getTitleNoneExiftool

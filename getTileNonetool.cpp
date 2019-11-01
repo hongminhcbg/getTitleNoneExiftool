@@ -6,7 +6,7 @@
 #include <ctype.h>
 
 #define BYTE_IN_FRAME (512)
-#define LOG 0
+#define LOG 1
 using namespace std;
 
 void printBuffer(unsigned char *buffer, int len, int frame, int onlyB64){
@@ -72,7 +72,7 @@ int checkB64Element(unsigned char *buffer, int len){
             buffer[i] == '=' || \
             (buffer[i] >= '0' && buffer[i] <= '9'))\
         ){
-            #if LOG
+            #if LOG                
                 printf("bug in %d with unsigned char = %c\n", i, buffer[i]);
             #endif
             return 0;
@@ -81,29 +81,41 @@ int checkB64Element(unsigned char *buffer, int len){
     return 1;
 }
 
-string getTitle(string prefix, int keyLength, string suffix, string path2file){
+string getTitle(string prefix, int keyLength, string suffix, string path2file, int isVideo){
     #if LOG
         cout << "[LHM] get title =====> prefix: " << prefix << " len: " << keyLength << " suffix: " << suffix << endl;
     #endif
     
 
     FILE *f1 = fopen(path2file.c_str(), "r");
+    if(isVideo){   
+        fseek(f1, 0L, SEEK_END);
+        long sz = ftell(f1);
+        #if LOG
+            cout << "file size: " << sz << endl;
+        #endif
+        fseek(f1, sz - 100*BYTE_IN_FRAME, SEEK_SET);
+    }
+
     unsigned char *buffer = (unsigned char*)malloc(2*BYTE_IN_FRAME + 5);
     memset(buffer, 0, 2*BYTE_IN_FRAME);
     int num;
     int readAllbyte = 0;
+    int frame = 0;
     while(1){
         memcpy(buffer, buffer + BYTE_IN_FRAME, BYTE_IN_FRAME);
         memset(buffer + BYTE_IN_FRAME, 0, BYTE_IN_FRAME);
         num = fread(buffer + BYTE_IN_FRAME, sizeof(unsigned char), BYTE_IN_FRAME, f1);
         if ( num ) {  /* fread success */
             readAllbyte += num;
+            frame++;
             for(int i  = 0; i < BYTE_IN_FRAME; i++){
                 if( checkMatch(buffer+i, prefix) &&\
                     checkB64Element(buffer + i + prefix.length(), keyLength) &&\
                     checkMatch(buffer + i + prefix.length() + keyLength, suffix)\
                   ){
                     #if LOG
+                        cout << "[LHM] read all " << frame << endl;
                         cout << "match data in " << i << endl;
                     #endif
                     string key(buffer + i + prefix.length(), buffer + i + prefix.length() + keyLength);
@@ -140,7 +152,9 @@ string getTitleNoneTool(string fileName){
     if(ext == "png"){
 //        return getTitle("Title", 171, "=", fileName) + "=";
         return "false";
+    } else if(ext == "mp4"){
+        return getTitle("<rdf:li xml:lang='x-default'>", 172, "</rdf:li>", fileName, 1);
     } 
-    return getTitle("<rdf:li xml:lang='x-default'>", 172, "</rdf:li>", fileName);
+    return getTitle("<rdf:li xml:lang='x-default'>", 172, "</rdf:li>", fileName, 0);
 
 }
